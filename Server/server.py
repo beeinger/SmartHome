@@ -3,36 +3,53 @@ from tornado.ioloop import IOLoop
 import json
 
 
-items = []
-readings = []
+lights = {
+        "kitchen": 0,
+        "livingroom": 0        
+    }
+sensors = {
+        "temperature": {
+            "kitchen": 0,
+            "livingroom": 0
+        },
+        "humidity": {
+            "kitchen": 0,
+            "livingroom": 0
+        }
+    }
 
-class GETer(RequestHandler):
+class GET(RequestHandler):
     def get(self):
-        self.write({"items": items, "readings": readings})
+        self.write({"lights": lights, "sensors": sensors})
 
 
-class POSTer(RequestHandler):
+class LightStatus(RequestHandler):
     def post(self):
-        items.append(json.loads(self.request.body.decode('ascii'))) 
+        lights.update(json.loads(self.request.body.decode('ascii'))) 
         self.write({'message': json.loads(self.request.body)})
 
-class Readings(RequestHandler):
+class SensorReadings(RequestHandler):
     def post(self):
-        readings.append(json.loads(self.request.body.decode('ascii')))
-        self.write('Message sent: ')
-        self.write(json.loads(self.request.body.decode('ascii')))
+        sensors.update(json.loads(self.request.body.decode('ascii')))
+        self.write({'message': json.loads(self.request.body)})
 
-class Remove(RequestHandler):
+class RemoveLight(RequestHandler):
     def post(self):
-        items.pop()
-        self.write({'message': items} )
+        lights.pop()
+        self.write({'message': lights} )
+
+class RemoveSensor(RequestHandler):
+    def post(self):
+        sensors.pop()
+        self.write({'message': sensors} )
 
 def make_app():
     urls = [
-        ("/", GETer),
-        ("/api/item/", POSTer),
-        ("/api/item/remove/", Remove),
-        ("/api/reading/", Readings)
+        ("/", GET),
+        ("/push/lights/", LightStatus),
+        ("/push/sensors/", SensorReadings),
+        ("/push/lights/remove/", RemoveLight),
+        ("/push/sensors/remove/", RemoveSensor)
     ]
     return Application(urls, debug=True)
   
